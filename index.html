@@ -299,12 +299,10 @@
   </div>
 
   <footer>
-    Powered by <a href="https://cobalt.tools" target="_blank" rel="noopener">cobalt.tools</a> &mdash; open source &amp; ad-free
+    Powered by <a href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener">yt-dlp</a> &mdash; open source &amp; ad-free
   </footer>
 
   <script>
-    const COBALT_API = 'https://api.cobalt.tools/';
-
     function setLoading(on) {
       document.getElementById('dlBtn').disabled = on;
       document.getElementById('dlBtn').textContent = on ? 'Fetching…' : 'Download';
@@ -326,8 +324,7 @@
 
     function renderResult(items) {
       const el = document.getElementById('resultEl');
-      const spinner = document.getElementById('spinnerEl');
-      spinner.style.display = 'none';
+      document.getElementById('spinnerEl').style.display = 'none';
 
       items.forEach((item, i) => {
         const div = document.createElement('div');
@@ -343,7 +340,6 @@
         link.href = item.url;
         link.textContent = 'Save';
         link.className = 'dl-link';
-        // Try to force download; on mobile this opens in browser which is fine
         link.setAttribute('download', item.filename || 'instagram-video.mp4');
         link.target = '_blank';
         link.rel = 'noopener';
@@ -366,7 +362,7 @@
 
       const igPattern = /instagram\.com\/(p|reel|tv|stories)\//i;
       if (!igPattern.test(url)) {
-        showError('That doesn\'t look like an Instagram post, reel, or story link. Make sure you copied the full URL.');
+        showError("That doesn't look like an Instagram post, reel, or story link. Make sure you copied the full URL.");
         return;
       }
 
@@ -375,54 +371,27 @@
       document.getElementById('statusBox').classList.add('visible');
 
       try {
-        const res = await fetch(COBALT_API, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({ url }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err?.error?.code || `Server error (${res.status})`);
-        }
-
+        const res = await fetch('/api/download?url=' + encodeURIComponent(url));
         const data = await res.json();
 
-        if (data.status === 'error') {
-          throw new Error(data.error?.code || 'Unknown error from download service');
+        if (!res.ok || data.error) {
+          throw new Error(data.error || `Server error (${res.status})`);
         }
 
-        if (data.status === 'picker' && Array.isArray(data.picker)) {
-          renderResult(data.picker.map((p, i) => ({
-            url: p.url,
-            filename: `instagram-${i + 1}.mp4`,
-          })));
-        } else if (data.url) {
-          renderResult([{ url: data.url, filename: 'instagram-video.mp4' }]);
-        } else {
+        if (!data.url) {
           throw new Error('No download link returned. The post may be private or unavailable.');
         }
 
+        renderResult([{ url: data.url, filename: data.filename || 'instagram-video.mp4' }]);
+
       } catch (e) {
         document.getElementById('statusBox').classList.remove('visible');
-        let msg = e.message || 'Something went wrong.';
-        if (msg.includes('fetch') || msg.includes('network') || msg.toLowerCase().includes('failed')) {
-          msg = 'Network error — check your connection and try again.';
-        } else if (msg.includes('content.video.unavailable') || msg.includes('unavailable')) {
-          msg = 'Video unavailable. The account may be private or the post may have been deleted.';
-        } else if (msg.includes('link.unsupported')) {
-          msg = 'Link not supported. Make sure it\'s a direct link to a post, reel, or story.';
-        }
-        showError(msg);
+        showError(e.message || 'Something went wrong. Please try again.');
       } finally {
         setLoading(false);
       }
     }
 
-    // Allow pressing Enter in the input
     document.getElementById('urlInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') startDownload();
     });

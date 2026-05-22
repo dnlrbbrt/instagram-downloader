@@ -4,9 +4,9 @@ A clean, ad-free Instagram video & reel downloader. Use it in your browser (work
 
 ## Web App (Phone / Browser)
 
-Visit your GitHub Pages URL:
+Visit your Vercel URL (set up once — see below):
 ```
-https://<your-username>.github.io/<repo-name>/
+https://instagram-downloader-<hash>.vercel.app
 ```
 
 1. Open Instagram → find the video → tap **⋯** → **Copy link**
@@ -31,11 +31,11 @@ The video is saved as `username_postid.mp4` in the current directory.
 
 ## How It Works
 
-The web app sends your link to [cobalt.tools](https://cobalt.tools) — a free, open-source video downloader API with no ads and no tracking. The command-line script uses [yt-dlp](https://github.com/yt-dlp/yt-dlp), the gold-standard open-source download tool.
+The web app calls a serverless API function (`/api/download`) that uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to extract the video URL from Instagram, then your browser downloads it directly. No ads, no tracking.
 
-## Deploy to GitHub Pages
+## Deploy to Vercel (free)
 
-1. Push this repo to GitHub
-2. Go to **Settings → Pages**
-3. Set Source to **Deploy from a branch**, branch `main`, folder `/ (root)`
-4. Save — your site will be live at `https://<username>.github.io/<repo>/`
+1. Go to [vercel.com](https://vercel.com) and sign in with GitHub
+2. Click **Add New → Project** and import `instagram-downloader`
+3. Leave all settings as default and click **Deploy**
+4. Your live URL appears — bookmark it on your phone
